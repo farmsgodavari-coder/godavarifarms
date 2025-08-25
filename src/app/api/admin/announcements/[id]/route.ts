@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse, Request } from "next/server";
 import prisma from "@/lib/prisma";
 import { z } from "zod";
 import { getSessionUser } from "@/lib/auth/session";
@@ -12,11 +12,11 @@ const updateSchema = z.object({
   endAt: z.string().datetime().nullable().optional(),
 });
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const { id } = context.params;
+    const { id } = params;
     const idNum = Number.parseInt(id, 10);
     const body = await req.json();
     const data = updateSchema.parse(body);
@@ -37,11 +37,11 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-export async function DELETE(_req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const { id } = context.params;
+    const { id } = params;
     const idNum = Number.parseInt(id, 10);
     await prisma.announcement.delete({ where: { id: idNum } });
     return NextResponse.json({ ok: true, id: idNum });
