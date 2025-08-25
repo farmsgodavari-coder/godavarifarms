@@ -1,0 +1,202 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----- Enums -----
+
+enum Size {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum Quality {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum Packing {
+  LOOSE
+  BAG
+  BOX
+}
+
+// Rate categories for admin-entered onion rates
+enum RateType {
+  DOMESTIC
+  EXPORT
+}
+
+// ----- Models -----
+
+model State {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  mandis    Mandi[]
+  prices    DailyPrice[]
+  onionRates OnionRate[]
+
+  @@map("states")
+}
+
+model Mandi {
+  id        Int        @id @default(autoincrement())
+  name      String
+  stateId   Int
+  state     State      @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  prices    DailyPrice[]
+  onionRates OnionRate[]
+
+  @@unique([name, stateId])
+  @@map("mandis")
+}
+
+model DailyPrice {
+  id        Int      @id @default(autoincrement())
+  date      DateTime
+  stateId   Int
+  mandiId   Int
+  size      Size
+  quality   Quality
+  packing   Packing
+  minPrice  Decimal   @db.Decimal(10,2)
+  avgPrice  Decimal   @db.Decimal(10,2)
+  maxPrice  Decimal   @db.Decimal(10,2)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  state   State @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  mandi   Mandi @relation(fields: [mandiId], references: [id], onDelete: Cascade)
+
+  @@index([date])
+  @@unique([date, stateId, mandiId, size, quality, packing])
+  @@map("daily_prices")
+}
+
+/// Admin-entered onion rates with single price per kg
+model OnionRate {
+  id         Int       @id @default(autoincrement())
+  date       DateTime
+  // For DOMESTIC
+  stateId    Int?
+  mandiId    Int?
+  // For EXPORT
+  country    String?
+  // Common fields
+  rateType   RateType  @default(DOMESTIC)
+  quality    Quality
+  sizeMm     Int       // onion size in millimeters
+  packing    Packing
+  pricePerKg Decimal   @db.Decimal(10,2)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  state   State? @relation(fields: [stateId], references: [id], onDelete: Cascade)
+  mandi   Mandi? @relation(fields: [mandiId], references: [id], onDelete: Cascade)
+
+  // History of edits
+  histories RateHistory[]
+
+  @@index([date])
+  // Single uniqueness across both types. For DOMESTIC country will be null; for EXPORT stateId/mandiId/quality may be null.
+  @@unique([rateType, date, stateId, mandiId, country, quality, sizeMm, packing])
+  @@map("onion_rates")
+}
+
+/// Record of changes to OnionRate (append-only)
+model RateHistory {
+  id          Int       @id @default(autoincrement())
+  onionRateId Int
+  changedAt   DateTime  @default(now())
+  changedBy   String
+  oldValues   Json
+  newValues   Json
+
+  onionRate OnionRate @relation(fields: [onionRateId], references: [id], onDelete: Cascade)
+
+  @@index([onionRateId])
+  @@map("rate_histories")
+}
+
+/// Short daily market notes for admins
+model MarketUpdate {
+  id        Int      @id @default(autoincrement())
+  date      DateTime @default(now())
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([date])
+  @@map("market_updates")
+}
+
+/// News/announcements; can be shown as ticker when isTicker=true and within schedule
+model Announcement {
+  id        Int      @id @default(autoincrement())
+  title     String
+  body      String
+  isTicker  Boolean  @default(false)
+  published Boolean  @default(false)
+  startAt   DateTime?
+  endAt     DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([published])
+  @@index([isTicker])
+  @@map("announcements")
+}
+
+/// Uploads: images, banners, docs. In dev we can store under /public/uploads.
+model MediaAsset {
+  id        Int      @id @default(autoincrement())
+  kind      String   // IMAGE | BANNER | DOC
+  title     String
+  url       String   // path or external URL
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@map("media_assets")
+}
+
+/// Key-value site settings and feature toggles
+model SiteSetting {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value Json
+
+  @@map("site_settings")
+}
+
+/// Optional: cached report payloads for quick download
+model ReportCache {
+  id        Int      @id @default(autoincrement())
+  name      String
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([name])
+  @@map("report_cache")
+}
+
+// Public contact inquiries
+model ContactInquiry {
+  id         Int      @id @default(autoincrement())
+  name       String
+  mobile     String
+  quantity   String
+  createdAt  DateTime @default(now())
+
+  @@map("contact_inquiries")
+}

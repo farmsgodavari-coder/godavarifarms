@@ -2,25 +2,75 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0b0f14; /* zinc-900-ish */
+  --accent-green: #16a34a; /* green-600 */
+  --accent-green-700: #15803d;
+  --accent-orange: #f97316; /* orange-500 */
+  --accent-orange-600: #ea580c;
+  --accent-blue: #1e3a8a; /* blue-800 */
+  --muted: #f6f7f8;
+  --border: #e5e7eb; /* zinc-200 */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent: var(--accent-green);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-blue: var(--accent-blue);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --font-sans: var(--font-inter);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --muted: #111315;
+    --border: #26282c;
   }
+}
+
+html, body {
+  height: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/***** Utilities *****/
+.table-card {
+  @apply bg-white border rounded-xl shadow-sm; /* light */
+}
+.btn-base {
+  @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors select-none;
+}
+.btn-primary {
+  background: var(--accent-green);
+  color: white;
+}
+.btn-primary:hover { background: var(--accent-green-700); }
+.btn-ghost { @apply border border-[color:var(--border)] bg-white hover:bg-[color:var(--muted)]; }
+.badge {
+  @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs;
+}
+.badge-green { @apply border-green-200 text-green-700; background: #ecfdf5; }
+.badge-indigo { @apply border-indigo-200 text-indigo-700; background: #eef2ff; }
+.badge-blue { @apply border-blue-200 text-blue-800; background: #eff6ff; }
+.card { @apply bg-white border border-[color:var(--color-border)] rounded-xl shadow-sm; }
+.card.hoverable { @apply transition-transform hover:-translate-y-0.5 hover:shadow-md; }
+
+/***** Layout helpers *****/
+.container-narrow { @apply max-w-5xl mx-auto px-6; }
+
+/***** Animations *****/
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in-up { animation: fade-in-up 600ms ease forwards; }
+.fade-in-up-delayed { animation: fade-in-up 700ms ease forwards; animation-delay: 120ms; opacity: 0; }
