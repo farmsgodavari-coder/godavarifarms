@@ -2,6 +2,29 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+const {
+  Scene,
+  WebGLRenderer,
+  PerspectiveCamera,
+  AmbientLight,
+  DirectionalLight,
+  Group,
+  Mesh,
+  MeshStandardMaterial,
+  Color,
+  SphereGeometry,
+  MeshBasicMaterial,
+  BackSide,
+  CatmullRomCurve3,
+  TubeGeometry,
+  BoxGeometry,
+  PointLight,
+  Clock,
+  Matrix4,
+  Object3D,
+  Material,
+  Vector3,
+} = THREE;
 
 export type Region = "none" | "domestic" | "export" | "farmer";
 
@@ -31,7 +54,7 @@ export default function TradingNetworkGlobe({ highlight = "none", className = "w
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const globeGroupRef = useRef<THREE.Group | null>(null);
-  const mixersRef = useRef<THREE.AnimationMixer[]>([]);
+  const mixersRef = useRef<any[]>([]);
   const indiaMarkerRef = useRef<THREE.Mesh | null>(null);
   const arcMatsRef = useRef<THREE.MeshStandardMaterial[]>([]);
   const rafRef = useRef<number | null>(null);
