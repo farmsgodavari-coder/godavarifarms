@@ -64,13 +64,24 @@ This project is a Next.js 13 App Router app that tracks daily onion prices with 
 
 ## Environment
 
-Create `.env` in project root:
+Create `.env.local` in project root. Choose one of the following:
 
-```
+- Local Docker Postgres (see `docker-compose.yml`):
+
+```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/onion_prices?schema=public"
 ```
 
-For hosted DB (e.g., Neon), use its connection string and include `sslmode=require` when needed.
+- Hosted Postgres (Neon/Vercel Postgres via Neon) — recommended pooled connection for serverless/Next.js:
+
+```env
+# Replace <USER>, <PASSWORD>, <HOST>, <DB>
+DATABASE_URL="postgresql://<USER>:<PASSWORD>@<HOST>/<DB>?sslmode=require&pgbouncer=true&connection_limit=1"
+```
+
+Notes:
+- Prisma works best with pooled connections in serverless. The flags `pgbouncer=true&connection_limit=1` are recommended with Neon PgBouncer.
+- On Vercel, set `DATABASE_URL` in Project Settings → Environment Variables.
 
 ## Install
 

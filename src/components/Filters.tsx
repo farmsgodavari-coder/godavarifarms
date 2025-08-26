@@ -31,16 +31,22 @@ export default function Filters({
 
   useEffect(() => {
     fetch("/api/meta/states")
-      .then((r) => r.json())
-      .then((d) => setStates(d ?? []))
+      .then(async (r) => {
+        const d = await r.json();
+        return Array.isArray(d) ? d : [];
+      })
+      .then((arr) => setStates(arr))
       .catch(() => setStates([]));
   }, []);
 
   useEffect(() => {
     if (value.stateId) {
       fetch(`/api/meta/mandis?stateId=${value.stateId}`)
-        .then((r) => r.json())
-        .then((d) => setMandis(d ?? []))
+        .then(async (r) => {
+          const d = await r.json();
+          return Array.isArray(d) ? d : [];
+        })
+        .then((arr) => setMandis(arr))
         .catch(() => setMandis([]));
     } else {
       setMandis([]);

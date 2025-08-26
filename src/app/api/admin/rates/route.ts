@@ -29,15 +29,14 @@ export async function GET(req: NextRequest) {
     const pageSize = Number(searchParams.get("pageSize") || 20);
     const skip = (page - 1) * pageSize;
 
-    const [items, total] = await Promise.all([
-      prisma.onionRate.findMany({
-        orderBy: { date: "desc" },
-        include: { state: true, mandi: true },
-        skip,
-        take: pageSize,
-      }),
-      prisma.onionRate.count(),
-    ]);
+    // Avoid parallel DB calls under PgBouncer/low connection limits
+    const items = await prisma.onionRate.findMany({
+      orderBy: { date: "desc" },
+      include: { state: true, mandi: true },
+      skip,
+      take: pageSize,
+    });
+    const total = await prisma.onionRate.count();
 
     return NextResponse.json({ items, total, page, pageSize });
   } catch (e) {

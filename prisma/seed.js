@@ -1,6 +1,40 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-console */
 // Simple JS seed to avoid ts-node dependency
+const fs = require("node:fs");
+const path = require("node:path");
+
+// Load env: prefer .env.local, fallback to .env
+const projectRoot = process.cwd();
+const envLocal = path.join(projectRoot, ".env.local");
+const envDefault = path.join(projectRoot, ".env");
+(function ensureDatabaseUrl() {
+  try {
+    if (!process.env.DATABASE_URL) {
+      const chosen = fs.existsSync(envLocal) ? envLocal : envDefault;
+      // Try Node's built-in loader if available
+      if (typeof process.loadEnvFile === "function") {
+        process.loadEnvFile(chosen, { override: false });
+      }
+      // If still not set, parse file manually
+      if (!process.env.DATABASE_URL && fs.existsSync(chosen)) {
+        const text = fs.readFileSync(chosen, "utf8");
+        for (const line of text.split(/\r?\n/)) {
+          const m = line.match(/^\s*DATABASE_URL\s*=\s*(.*)\s*$/);
+          if (m) {
+            let v = m[1].trim();
+            if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+              v = v.slice(1, -1);
+            }
+            if (!process.env.DATABASE_URL) process.env.DATABASE_URL = v;
+            break;
+          }
+        }
+      }
+    }
+  } catch {}
+})();
+
 const { PrismaClient, Packing, Quality, Size } = require("@prisma/client");
 
 const prisma = new PrismaClient();

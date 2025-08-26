@@ -8,11 +8,25 @@ export async function GET(req: NextRequest) {
 
     const where = stateId ? { stateId: Number(stateId) } : {};
 
-    const mandis = await prisma.mandi.findMany({
-      where,
-      orderBy: { name: "asc" },
-    });
-    return NextResponse.json(mandis);
+    // minimal retry for transient pool timeouts (P2024)
+    let lastErr: any;
+    for (let i = 0; i < 2; i++) {
+      try {
+        const mandis = await prisma.mandi.findMany({
+          where,
+          orderBy: { name: "asc" },
+        });
+        return NextResponse.json(mandis);
+      } catch (e: any) {
+        lastErr = e;
+        if (e?.code === "P2024") {
+          await new Promise((r) => setTimeout(r, 200 * (i + 1)));
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw lastErr;
   } catch (e) {
     console.error(e);
     return NextResponse.json({ error: "Failed to fetch mandis" }, { status: 500 });

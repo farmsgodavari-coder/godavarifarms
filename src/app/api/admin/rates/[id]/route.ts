@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/session";
 import { z } from "zod";
@@ -16,12 +16,14 @@ const updateSchema = z.object({
   pricePerKg: z.number().positive().optional(),
 });
 
-export async function PUT(req: NextRequest, context: { params: { id: string } }) {
+export async function PUT(req: Request, context: any) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { id } = context.params;
+    const idRaw = context?.params?.id as string | string[] | undefined;
+    const id = Array.isArray(idRaw) ? idRaw[0] : idRaw;
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     const body = await req.json();
     const parsed = updateSchema.parse(body);
 
@@ -47,12 +49,14 @@ export async function PUT(req: NextRequest, context: { params: { id: string } })
   }
 }
 
-export async function DELETE(_req: NextRequest, context: { params: { id: string } }) {
+export async function DELETE(_req: Request, context: any) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const { id } = context.params;
+    const idRaw = context?.params?.id as string | string[] | undefined;
+    const id = Array.isArray(idRaw) ? idRaw[0] : idRaw;
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     const idNum = Number.parseInt(id, 10);
     if (!Number.isFinite(idNum)) {
       return NextResponse.json({ error: "Invalid id" }, { status: 400 });

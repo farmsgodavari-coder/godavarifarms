@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { getSessionUser } from "@/lib/auth/session";
 
@@ -15,18 +15,19 @@ function toCsv(rows: any[]): string {
   return lines.join("\n");
 }
 
-export async function GET(req: NextRequest) {
+export async function GET(req: Request) {
   // Auth
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const kind = req.nextUrl.searchParams.get("kind") || "rates_7d";
+  const urlObj = new URL(req.url);
+  const kind = urlObj.searchParams.get("kind") || "rates_7d";
   if (kind !== "rates_7d") {
     return NextResponse.json({ error: "Unknown kind" }, { status: 400 });
   }
 
   // Build internal URL to reuse /api/rates
-  const h = headers();
+  const h = await headers();
   const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
   const proto = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
 

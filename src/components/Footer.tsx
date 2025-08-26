@@ -11,8 +11,8 @@ export default function Footer() {
         </div>
         <div className="space-y-1">
           <h4 className="font-semibold text-white">Contact</h4>
-          <p className="text-sm text-zinc-400">Email: <a className="hover:underline" href="mailto:info@godavarifarms.in">info@godavarifarms.in</a></p>
-          <p className="text-sm text-zinc-400">Phone: <a className="hover:underline" href="tel:+919999999999">+91 99999 99999</a></p>
+          <p className="text-sm text-zinc-400">Email: <a className="hover:underline" href="mailto:farmsgodavari@gmail.com">farmsgodavari@gmail.com</a></p>
+          <p className="text-sm text-zinc-400">Phone: <a className="hover:underline" href="tel:+919370513599">+91 93705 13599</a></p>
         </div>
         <div className="space-y-2">
           <h4 className="font-semibold text-white">Follow</h4>
@@ -29,7 +29,7 @@ export default function Footer() {
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10 py-4 text-center text-xs text-zinc-400">© {new Date().getFullYear()} Godavari Farms. All rights reserved.</div>
+      <div className="border-t border-white/10 py-4 text-center text-xs text-zinc-400"> {new Date().getFullYear()} Godavari Farms. All rights reserved.</div>
     </footer>
   );
 }
