@@ -16,13 +16,12 @@ const updateSchema = z.object({
   pricePerKg: z.number().positive().optional(),
 });
 
-export async function PUT(req: Request, context: any) {
+export async function PUT(req: Request, { params }: any) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const idRaw = context?.params?.id as string | string[] | undefined;
-    const id = Array.isArray(idRaw) ? idRaw[0] : idRaw;
+    const id = params?.id as string | undefined;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     const body = await req.json();
     const parsed = updateSchema.parse(body);
@@ -49,13 +48,12 @@ export async function PUT(req: Request, context: any) {
   }
 }
 
-export async function DELETE(_req: Request, context: any) {
+export async function DELETE(_req: Request, { params }: any) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const idRaw = context?.params?.id as string | string[] | undefined;
-    const id = Array.isArray(idRaw) ? idRaw[0] : idRaw;
+    const id = params?.id as string | undefined;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     const idNum = Number.parseInt(id, 10);
     if (!Number.isFinite(idNum)) {

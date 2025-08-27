@@ -8,11 +8,11 @@ const updateSchema = z.object({
   text: z.string().min(1).optional(),
 });
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: any) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const id = params.id;
+    const id = params?.id as string | undefined;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     const idNum = Number.parseInt(id, 10);
     const body = await req.json();
@@ -30,11 +30,11 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(_req: Request, { params }: any) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   try {
-    const id = params.id;
+    const id = params?.id as string | undefined;
     if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
     const idNum = Number.parseInt(id, 10);
     await prisma.marketUpdate.delete({ where: { id: idNum } });
