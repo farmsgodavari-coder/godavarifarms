@@ -16,13 +16,14 @@ export default function NavBar() {
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-zinc-200">
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center transition-opacity hover:opacity-80">
           <Image
             src="/logo.png"
             alt="Godavari Farms Logo"
-            width={120}
-            height={48}
+            width={100}
+            height={40}
             priority
+            className="h-10 w-auto"
           />
         </Link>
         <div className="flex items-center gap-1">
