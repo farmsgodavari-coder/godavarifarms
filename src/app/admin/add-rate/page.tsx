@@ -19,16 +19,15 @@ export default function AddRatePage() {
   const [quality, setQuality] = useState("MEDIUM");
   const [sizeMm, setSizeMm] = useState<number | "">("");
   const [packing, setPacking] = useState("BAG");
-  // UI-only packing label (e.g., "18 KG Packing", "15 KG Jute Bag"). We still submit packing enum as before.
-  const [packingLabel, setPackingLabel] = useState<string>("");
+  const [packingDescription, setPackingDescription] = useState<string>("");
   type Country = "Dubai" | "Malaysia" | "Sri Lanka" | "Bangladesh" | "Vietnam";
   const [country, setCountry] = useState<Country | "">("");
-  const countryDefaults: Record<Country, { size: number; packingLabel: string; packingEnum: "BAG" | "LOOSE" | "BOX" }> = {
-    Dubai: { size: 55, packingLabel: "18 KG Packing", packingEnum: "BAG" },
-    Malaysia: { size: 45, packingLabel: "15 KG Packing", packingEnum: "BAG" },
-    "Sri Lanka": { size: 45, packingLabel: "15 KG Jute Bag", packingEnum: "BAG" },
-    Bangladesh: { size: 40, packingLabel: "15 KG Jute Bag", packingEnum: "BAG" },
-    Vietnam: { size: 25, packingLabel: "10 KG Packing", packingEnum: "BAG" },
+  const countryDefaults: Record<Country, { size: number; packingDescription: string; packingEnum: "BAG" | "LOOSE" | "BOX" }> = {
+    Dubai: { size: 55, packingDescription: "18 KG Packing", packingEnum: "BAG" },
+    Malaysia: { size: 45, packingDescription: "15 KG Packing", packingEnum: "BAG" },
+    "Sri Lanka": { size: 45, packingDescription: "15 KG Jute Bag", packingEnum: "BAG" },
+    Bangladesh: { size: 40, packingDescription: "15 KG Jute Bag", packingEnum: "BAG" },
+    Vietnam: { size: 25, packingDescription: "10 KG Packing", packingEnum: "BAG" },
   };
   const [pricePerKg, setPricePerKg] = useState<number | "">("");
   const [error, setError] = useState<string | null>(null);
@@ -92,11 +91,17 @@ export default function AddRatePage() {
       } else {
         if (!country) throw new Error("Country is required for Export rates");
       }
+      
+      if (!sizeMm || !pricePerKg) {
+        throw new Error("Size and Price are required");
+      }
+
       const payload: any = {
         rateType,
         date,
         sizeMm: Number(sizeMm),
         packing,
+        packingDescription: packingDescription.trim() || null,
         pricePerKg: Number(pricePerKg),
       };
       if (isDomestic) {
@@ -114,9 +119,11 @@ export default function AddRatePage() {
       });
       const js = await res.json();
       if (!res.ok) throw new Error(js.error || "Failed to add rate");
-      setSuccess("Rate added successfully.");
-      // Let SSE propagate and keep user here
-      setTimeout(() => setSuccess(null), 3000);
+      setSuccess("Rate added successfully. Public site will update immediately.");
+      // Reset form for next entry
+      setPackingDescription("");
+      setPricePerKg("");
+      setTimeout(() => setSuccess(null), 4000);
     } catch (e: any) {
       setError(e.message || "Error");
     } finally {
@@ -147,6 +154,7 @@ export default function AddRatePage() {
         quality: "MEDIUM",
         sizeMm: 55,
         packing: "BAG",
+        packingDescription: "25 KG Jute Bag",
         pricePerKg: 20,
       };
       const res = await fetch("/api/admin/rates", {
@@ -169,101 +177,141 @@ export default function AddRatePage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Add Rate</h1>
       <form onSubmit={onSubmit} className="grid gap-4 max-w-2xl">
-        {error && <div className="text-sm text-red-600">{error}</div>}
-        {success && <div className="text-sm text-green-700">{success}</div>}
+        {error && <div className="text-sm text-red-600 bg-red-50 p-3 rounded border">{error}</div>}
+        {success && <div className="text-sm text-green-700 bg-green-50 p-3 rounded border">{success}</div>}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="text-sm">Rate Type</label>
+            <label className="text-sm font-medium">Rate Type *</label>
             <select className="w-full border rounded px-3 py-2" value={rateType}
               onChange={(e) => {
                 const v = e.target.value as "DOMESTIC" | "EXPORT";
                 setRateType(v);
+                // Reset fields when switching types
+                if (v === "EXPORT") {
+                  setStateId("");
+                  setMandiId("");
+                } else {
+                  setCountry("");
+                }
               }}>
               <option value="DOMESTIC">Domestic</option>
               <option value="EXPORT">Export</option>
             </select>
           </div>
           <div>
-            <label className="text-sm">State</label>
-            <select className="w-full border rounded px-3 py-2" value={stateId as any}
-              onChange={e => setStateId(e.target.value ? Number(e.target.value) : "")}
-              required={rateType === "DOMESTIC"}
-              disabled={rateType === "EXPORT" || statesLoading}
-            >
-              <option value="">{statesLoading ? "Loading states..." : "Select state"}</option>
-              {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              {!statesLoading && states.length === 0 && <option value="" disabled>(No states found)</option>}
-            </select>
-          </div>
-          <div>
-            <label className="text-sm">Mandi/City</label>
-            <select className="w-full border rounded px-3 py-2" value={mandiId as any}
-              onChange={e => setMandiId(e.target.value ? Number(e.target.value) : "")}
-              required={rateType === "DOMESTIC"}
-              disabled={rateType === "EXPORT" || !stateId || mandisLoading}
-            >
-              <option value="">{mandisLoading ? "Loading mandis..." : "Select mandi"}</option>
-              {mandis.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-              {!mandisLoading && stateId && mandis.length === 0 && <option value="" disabled>(No mandis found)</option>}
-            </select>
-          </div>
-          <div>
-            <label className="text-sm">Date</label>
+            <label className="text-sm font-medium">Date *</label>
             <input type="date" className="w-full border rounded px-3 py-2" value={date} onChange={e => setDate(e.target.value)} required />
           </div>
+          
+          {rateType === "DOMESTIC" && (
+            <>
+              <div>
+                <label className="text-sm font-medium">State *</label>
+                <select className="w-full border rounded px-3 py-2" value={stateId as any}
+                  onChange={e => setStateId(e.target.value ? Number(e.target.value) : "")}
+                  required
+                  disabled={statesLoading}
+                >
+                  <option value="">{statesLoading ? "Loading states..." : "Select state"}</option>
+                  {states.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {!statesLoading && states.length === 0 && <option value="" disabled>(No states found)</option>}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Mandi/City *</label>
+                <select className="w-full border rounded px-3 py-2" value={mandiId as any}
+                  onChange={e => setMandiId(e.target.value ? Number(e.target.value) : "")}
+                  required
+                  disabled={!stateId || mandisLoading}
+                >
+                  <option value="">{mandisLoading ? "Loading mandis..." : "Select mandi"}</option>
+                  {mandis.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  {!mandisLoading && stateId && mandis.length === 0 && <option value="" disabled>(No mandis found)</option>}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Onion Quality *</label>
+                <select className="w-full border rounded px-3 py-2" value={quality} onChange={e => setQuality(e.target.value)}>
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {rateType === "EXPORT" && (
+            <>
+              <div>
+                <label className="text-sm font-medium">Country *</label>
+                <select
+                  className="w-full border rounded px-3 py-2"
+                  value={country as any}
+                  onChange={(e) => {
+                    const c = (e.target.value || "") as Country | "";
+                    setCountry(c);
+                    if (c && countryDefaults[c as Country]) {
+                      const d = countryDefaults[c as Country];
+                      setSizeMm(d.size);
+                      setPackingDescription(d.packingDescription);
+                      setPacking(d.packingEnum);
+                    }
+                  }}
+                  required
+                >
+                  <option value="">Select country</option>
+                  {( ["Dubai","Malaysia","Sri Lanka","Bangladesh","Vietnam"] as const).map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Quality</label>
+                <select className="w-full border rounded px-3 py-2" value={quality} onChange={e => setQuality(e.target.value)}>
+                  <option value="LOW">LOW</option>
+                  <option value="MEDIUM">MEDIUM</option>
+                  <option value="HIGH">HIGH</option>
+                </select>
+                <div className="text-xs text-gray-500 mt-1">Auto-set to MEDIUM for exports</div>
+              </div>
+            </>
+          )}
+
           <div>
-            <label className="text-sm">Onion Quality</label>
-            <select className="w-full border rounded px-3 py-2" value={quality} onChange={e => setQuality(e.target.value)} disabled={rateType === "EXPORT"}>
-              <option value="LOW">LOW</option>
-              <option value="MEDIUM">MEDIUM</option>
-              <option value="HIGH">HIGH</option>
-            </select>
-          </div>
-          <div>
-            <label className="text-sm">Country {rateType === "EXPORT" ? "(required)" : "(optional)"}</label>
-            <select
-              className="w-full border rounded px-3 py-2"
-              value={country as any}
-              onChange={(e) => {
-                const c = (e.target.value || "") as Country | "";
-                setCountry(c);
-                if (c && countryDefaults[c as Country]) {
-                  const d = countryDefaults[c as Country];
-                  setSizeMm(d.size);
-                  setPackingLabel(d.packingLabel);
-                  setPacking(d.packingEnum); // keep enum for backend
-                }
-              }}
-              disabled={rateType === "DOMESTIC"}
-            >
-              <option value="">Select country</option>
-              {( ["Dubai","Malaysia","Sri Lanka","Bangladesh","Vietnam"] as const).map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="text-sm">Size (mm)</label>
+            <label className="text-sm font-medium">Size (mm) *</label>
             <input type="number" className="w-full border rounded px-3 py-2" value={sizeMm as any} onChange={e => setSizeMm(e.target.value ? Number(e.target.value) : "")} required />
           </div>
           <div>
-            <label className="text-sm">Packing Type</label>
+            <label className="text-sm font-medium">Packing Type</label>
+            <select className="w-full border rounded px-3 py-2" value={packing} onChange={e => setPacking(e.target.value)}>
+              <option value="LOOSE">LOOSE</option>
+              <option value="BAG">BAG</option>
+              <option value="BOX">BOX</option>
+            </select>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-sm font-medium">Packing Description</label>
             <input
               className="w-full border rounded px-3 py-2"
-              placeholder="e.g., 18 KG Packing, 15 KG Jute Bag"
-              value={packingLabel}
-              onChange={(e) => setPackingLabel(e.target.value)}
+              placeholder="e.g., 18 KG Packing, 15 KG Jute Bag, 25 KG PP Bag"
+              value={packingDescription}
+              onChange={(e) => setPackingDescription(e.target.value)}
             />
-            <div className="text-xs text-zinc-500 mt-1">System will save packing enum as BAG; label is for admin reference.</div>
+            <div className="text-xs text-gray-500 mt-1">Detailed description of packing for buyers</div>
           </div>
           <div>
-            <label className="text-sm">Price per kg</label>
+            <label className="text-sm font-medium">Price per kg *</label>
             <input type="number" step="0.01" className="w-full border rounded px-3 py-2" value={pricePerKg as any} onChange={e => setPricePerKg(e.target.value ? Number(e.target.value) : "")} required />
           </div>
         </div>
-        <div className="text-xs text-zinc-600">Auto-filled values can be changed manually if needed.</div>
-        <button disabled={loading} className="w-full sm:w-auto bg-black text-white px-4 py-2 rounded disabled:opacity-60">{loading ? "Saving..." : "Save"}</button>
-        <button type="button" onClick={addSample} disabled={loading} className="w-full sm:w-auto border border-black text-black px-4 py-2 rounded disabled:opacity-60">{loading ? "Please wait..." : "Add Sample Rate"}</button>
+        <div className="flex gap-3">
+          <button disabled={loading} className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-60">
+            {loading ? "Saving..." : "Save Rate"}
+          </button>
+          <button type="button" onClick={addSample} disabled={loading} className="border border-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-50 disabled:opacity-60">
+            {loading ? "Please wait..." : "Add Sample Rate"}
+          </button>
+        </div>
       </form>
     </div>
   );

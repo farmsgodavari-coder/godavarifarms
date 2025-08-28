@@ -1,82 +1,101 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth/session";
 import { z } from "zod";
+import events from "@/lib/events";
 import { Packing, Quality, RateType } from "@prisma/client";
 
 const updateSchema = z.object({
   date: z.string().optional(),
   rateType: z.enum(["DOMESTIC", "EXPORT"]).optional(),
-  stateId: z.number().int().positive().optional(),
-  mandiId: z.number().int().positive().optional(),
-  country: z.string().min(1).optional(),
+  stateId: z.number().int().positive().nullable().optional(),
+  mandiId: z.number().int().positive().nullable().optional(),
   quality: z.enum(["LOW", "MEDIUM", "HIGH"]).optional(),
+  country: z.string().min(1).nullable().optional(),
   sizeMm: z.number().int().positive().optional(),
   packing: z.enum(["LOOSE", "BAG", "BOX"]).optional(),
+  packingDescription: z.string().nullable().optional(),
   pricePerKg: z.number().positive().optional(),
 });
 
-export async function PUT(req: Request, { params }: any) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const id = params?.id as string | undefined;
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    const body = await req.json();
-    const parsed = updateSchema.parse(body);
+    const id = parseInt(params.id);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid rate ID" }, { status: 400 });
+    }
 
-    const updated = await prisma.onionRate.update({
-      where: { id: Number.parseInt(id, 10) },
-      data: {
-        ...(parsed.date ? { date: new Date(parsed.date) } : {}),
-        ...(parsed.rateType ? { rateType: parsed.rateType as RateType } : {}),
-        ...(parsed.stateId !== undefined ? { stateId: parsed.stateId } : {}),
-        ...(parsed.mandiId !== undefined ? { mandiId: parsed.mandiId } : {}),
-        ...(parsed.country !== undefined ? { country: parsed.country } : {}),
-        ...(parsed.quality ? { quality: parsed.quality as Quality } : {}),
-        ...(parsed.sizeMm ? { sizeMm: parsed.sizeMm } : {}),
-        ...(parsed.packing ? { packing: parsed.packing as Packing } : {}),
-        ...(parsed.pricePerKg ? { pricePerKg: parsed.pricePerKg } : {}),
-      },
+    const json = await req.json();
+    const parsed = updateSchema.parse(json);
+
+    // Check if rate exists
+    const existing = await prisma.onionRate.findUnique({
+      where: { id },
     });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Rate not found" }, { status: 404 });
+    }
+
+    // Update the rate
+    const updated = await prisma.onionRate.update({
+      where: { id },
+      data: {
+        ...(parsed.date && { date: new Date(parsed.date) }),
+        ...(parsed.rateType && { rateType: parsed.rateType as RateType }),
+        ...(parsed.stateId !== undefined && { stateId: parsed.stateId }),
+        ...(parsed.mandiId !== undefined && { mandiId: parsed.mandiId }),
+        ...(parsed.quality && { quality: parsed.quality as Quality }),
+        ...(parsed.country !== undefined && { country: parsed.country }),
+        ...(parsed.sizeMm && { sizeMm: parsed.sizeMm }),
+        ...(parsed.packing && { packing: parsed.packing as Packing }),
+        ...(parsed.packingDescription !== undefined && { packingDescription: parsed.packingDescription }),
+        ...(parsed.pricePerKg && { pricePerKg: parsed.pricePerKg }),
+      },
+      include: { state: true, mandi: true },
+    });
+
+    events.emit("rate:updated", { type: "rate:updated", payload: { id: updated.id } });
     return NextResponse.json(updated);
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : "Failed to update";
+    const msg = e instanceof Error ? e.message : "Failed to update rate";
     console.error(e);
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 }
 
-export async function DELETE(_req: Request, { params }: any) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
-    const id = params?.id as string | undefined;
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
-    const idNum = Number.parseInt(id, 10);
-    if (!Number.isFinite(idNum)) {
-      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    const id = parseInt(params.id);
+    if (isNaN(id)) {
+      return NextResponse.json({ error: "Invalid rate ID" }, { status: 400 });
     }
-    console.log("[DELETE /api/admin/rates/:id] deleting", { id });
-    // If DB is not configured, perform a mock delete to satisfy UI behavior
-    if (!process.env.DATABASE_URL) {
-      console.warn("[DELETE /api/admin/rates/:id] DATABASE_URL missing; performing mock delete.", { id: idNum });
-      return NextResponse.json({ ok: true, mock: true, id: idNum });
+
+    // Check if rate exists
+    const existing = await prisma.onionRate.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ error: "Rate not found" }, { status: 404 });
     }
-    const deleted = await prisma.onionRate.delete({ where: { id: idNum } });
-    console.log("[DELETE /api/admin/rates/:id] deleted", { ok: !!deleted, id: idNum });
-    return NextResponse.json({ ok: true, id: idNum });
+
+    // Delete the rate
+    await prisma.onionRate.delete({
+      where: { id },
+    });
+
+    events.emit("rate:deleted", { type: "rate:deleted", payload: { id } });
+    return NextResponse.json({ success: true, message: "Rate deleted successfully" });
   } catch (e: unknown) {
-    console.error("[DELETE /api/admin/rates/:id] error", e);
-    // Prisma P1001: The database server was unreachable
-    const msg = e instanceof Error ? e.message : "";
-    const code = (e as any)?.code as string | undefined;
-    if (code === "P1001" || msg.toLowerCase().includes("can't reach database") || msg.toLowerCase().includes("unreachable")) {
-      console.warn("[DELETE /api/admin/rates/:id] DB unreachable; returning mock success.", { code });
-      return NextResponse.json({ ok: true, mock: true });
-    }
-    return NextResponse.json({ error: msg || "Failed to delete" }, { status: 400 });
+    const msg = e instanceof Error ? e.message : "Failed to delete rate";
+    console.error(e);
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
 }

@@ -13,6 +13,11 @@ interface OnionRate {
   avgPrice: number;
   quality: string;
   unit: string;
+  packing?: string;
+  packingDescription?: string | null;
+  rateType?: string;
+  country?: string | null;
+  sizeMm?: number | null;
 }
 
 export default function DailyRatesPage() {
@@ -50,7 +55,12 @@ export default function DailyRatesPage() {
               avgPrice: Number(rate.pricePerKg || 0),
               quality: rate.quality === "HIGH" ? "Premium" : 
                        rate.quality === "MEDIUM" ? "Grade A" : "Standard",
-              unit: "per kg"
+              unit: "per kg",
+              packing: rate.packing || "BAG",
+              packingDescription: rate.packingDescription || null,
+              rateType: rate.rateType || "DOMESTIC",
+              country: rate.country || null,
+              sizeMm: rate.sizeMm || null,
             }));
             setData(transformedRates);
             setFilteredData(transformedRates);
@@ -69,7 +79,12 @@ export default function DailyRatesPage() {
             maxPrice: 3200,
             avgPrice: 2850,
             quality: "Premium",
-            unit: "per quintal"
+            unit: "per quintal",
+            packing: "BAG",
+            packingDescription: "25 KG Jute Bag",
+            rateType: "DOMESTIC",
+            country: null,
+            sizeMm: 55,
           }
         ];
         setData(fallbackData);
@@ -202,9 +217,11 @@ export default function DailyRatesPage() {
                   <thead className="bg-gradient-to-r from-green-600 to-green-700 text-white">
                     <tr>
                       <th className="px-6 py-4 text-left font-semibold">Date</th>
+                      <th className="px-6 py-4 text-left font-semibold">Type</th>
                       <th className="px-6 py-4 text-left font-semibold">Variety</th>
                       <th className="px-6 py-4 text-left font-semibold">Location</th>
                       <th className="px-6 py-4 text-left font-semibold">Quality</th>
+                      <th className="px-6 py-4 text-left font-semibold">Packing</th>
                       <th className="px-6 py-4 text-right font-semibold">Min Price</th>
                       <th className="px-6 py-4 text-right font-semibold">Max Price</th>
                       <th className="px-6 py-4 text-right font-semibold">Avg Price</th>
@@ -223,6 +240,13 @@ export default function DailyRatesPage() {
                             {new Date(rate.date).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                              rate.rateType === "EXPORT" ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"
+                            }`}>
+                              {rate.rateType === "EXPORT" ? `Export${rate.country ? ` (${rate.country})` : ""}` : "Domestic"}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
                             <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               {rate.variety}
                             </span>
@@ -237,6 +261,17 @@ export default function DailyRatesPage() {
                               {rate.quality}
                             </span>
                           </td>
+                          <td className="px-6 py-4">
+                            <div className="text-sm">
+                              <div className="font-medium text-gray-900">{rate.packing || "BAG"}</div>
+                              {rate.packingDescription && (
+                                <div className="text-gray-500 text-xs">{rate.packingDescription}</div>
+                              )}
+                              {rate.sizeMm && (
+                                <div className="text-gray-400 text-xs">{rate.sizeMm}mm</div>
+                              )}
+                            </div>
+                          </td>
                           <td className="px-6 py-4 text-right font-semibold text-gray-800">
                             ₹{rate.minPrice.toLocaleString()}
                           </td>
@@ -250,7 +285,7 @@ export default function DailyRatesPage() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={9} className="px-6 py-12 text-center text-gray-500">
                           <div className="flex flex-col items-center">
                             <svg className="w-12 h-12 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

@@ -42,6 +42,11 @@ export async function GET() {
         avgPrice: avg,
         quality: qualityLabel(item.quality),
         unit: "per kg",
+        packing: item.packing || "BAG",
+        packingDescription: item.packingDescription || null,
+        rateType: item.rateType || "DOMESTIC",
+        country: item.country || null,
+        sizeMm: item.sizeMm || null,
       };
     });
 
@@ -65,6 +70,11 @@ export async function GET() {
         avgPrice: 2850,
         quality: "Premium",
         unit: "per quintal",
+        packing: "BAG",
+        packingDescription: "25 KG Jute Bag",
+        rateType: "DOMESTIC",
+        country: null,
+        sizeMm: 55,
       },
     ];
 

@@ -17,6 +17,7 @@ const createSchema = z.object({
   // Common
   sizeMm: z.number().int().positive(),
   packing: z.enum(["LOOSE", "BAG", "BOX"]),
+  packingDescription: z.string().optional(), // New field for detailed packing info
   pricePerKg: z.number().positive(),
 });
 
@@ -83,7 +84,10 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const updated = await prisma.onionRate.update({
         where: { id: existing.id },
-        data: { pricePerKg: parsed.pricePerKg },
+        data: { 
+          pricePerKg: parsed.pricePerKg,
+          packingDescription: parsed.packingDescription || null
+        },
       });
       events.emit("rate:updated", { type: "rate:updated", payload: { id: updated.id } });
       return NextResponse.json(updated);
@@ -98,6 +102,7 @@ export async function POST(req: NextRequest) {
         quality: parsed.quality as Quality,
         sizeMm: parsed.sizeMm,
         packing: parsed.packing as Packing,
+        packingDescription: parsed.packingDescription || null,
         pricePerKg: parsed.pricePerKg,
       },
     });
