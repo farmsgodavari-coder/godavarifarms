@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 export default function NavBar() {
@@ -15,9 +16,14 @@ export default function NavBar() {
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur border-b border-zinc-200">
       <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-green-500 to-orange-400" />
-          <span className="font-bold text-lg tracking-tight text-zinc-900">Godavari Farms</span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo.png"
+            alt="Godavari Farms Logo"
+            width={120}
+            height={48}
+            priority
+          />
         </Link>
         <div className="flex items-center gap-1">
           {link("/", "Home")}

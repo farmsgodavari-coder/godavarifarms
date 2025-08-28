@@ -21,6 +21,7 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --font-sans: var(--font-inter);
+  --font-poppins: Poppins, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -45,19 +46,30 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Headings use Poppins for a professional tone */
+h1, h2, h3, h4, .heading {
+  font-family: var(--font-poppins), var(--font-inter), ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial;
+  letter-spacing: -0.01em;
+}
+
+/* Subtle body text color improvements */
+.prose-muted { color: #4b5563; } /* zinc-600 */
+
 /***** Utilities *****/
 .table-card {
   @apply bg-white border rounded-xl shadow-sm; /* light */
 }
 .btn-base {
-  @apply inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors select-none;
+  @apply inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm font-medium transition-all select-none shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-green)] focus-visible:ring-offset-2 active:translate-y-[1px];
 }
 .btn-primary {
-  background: var(--accent-green);
+  background: linear-gradient(180deg, var(--accent-green) 0%, #128a3a 100%);
   color: white;
+  box-shadow: 0 6px 20px rgba(22, 163, 74, 0.25);
 }
-.btn-primary:hover { background: var(--accent-green-700); }
-.btn-ghost { @apply border border-[color:var(--border)] bg-white hover:bg-[color:var(--muted)]; }
+.btn-primary:hover { filter: brightness(1.05); transform: translateY(-1px); }
+.btn-primary:active { filter: none; transform: translateY(0); }
+.btn-ghost { @apply border border-[color:var(--border)] bg-white hover:bg-[color:var(--muted)]; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
 .badge {
   @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs;
 }

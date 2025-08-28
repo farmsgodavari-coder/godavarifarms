@@ -172,17 +172,33 @@ export default function Home() {
       )}
       {/* Hero */}
       <section className="relative">
-        <div className="absolute inset-0 bg-[url('/globe.svg')] bg-cover bg-center" />
-        <div className="relative bg-gradient-to-b from-white/70 via-white/85 to-white">
-          <div className="max-w-6xl mx-auto px-6 py-16 sm:py-24">
-            <div className="text-sm uppercase tracking-wide text-green-700">Godavari Farms</div>
-            <h1 className="text-4xl sm:text-6xl font-extrabold leading-tight mt-2">Daily Onion Market Rates</h1>
-            <p className="mt-2 text-zinc-700 max-w-2xl">Updated live from markets across India</p>
-            <div className="mt-1 text-sm text-zinc-600">Last Updated: {lastUpdated ? new Date(lastUpdated).toLocaleString() : "--"}</div>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <Link href="/" className="btn-ghost btn-base">Home</Link>
-              <Link href="/about" className="btn-ghost btn-base">About Us</Link>
-              <Link href="/contact" className="btn-primary btn-base">Contact Us</Link>
+        {/* Background image with subtle overlay (replace /globe.svg with an onion image placed under /public if available) */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-[url('/globe.svg')] bg-cover bg-center" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/40 to-white" aria-hidden />
+        </div>
+        <div className="relative">
+          <div className="max-w-6xl mx-auto px-6 py-20 sm:py-28">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/40 bg-white/60 backdrop-blur px-3 py-1 text-xs font-medium text-green-800">
+              <span className="h-2 w-2 rounded-full bg-[color:var(--accent-green)]" />
+              Godavari Farms
+            </div>
+            <h1 className="mt-4 text-4xl sm:text-6xl font-extrabold leading-[1.1] tracking-tight heading">
+              Daily Onion Market Rates
+            </h1>
+            <p className="mt-3 max-w-2xl text-base sm:text-lg prose-muted">
+              Live prices with export and domestic filters. Updated in near real-time from markets across India.
+            </p>
+            <div className="mt-2 text-xs sm:text-sm text-zinc-600">
+              Last Updated: {lastUpdated ? new Date(lastUpdated).toLocaleString() : "--"}
+            </div>
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
+              <Link href="/contact" className="btn-primary btn-base">
+                Contact Us
+              </Link>
+              <Link href="/about" className="btn-ghost btn-base">
+                About Us
+              </Link>
             </div>
           </div>
         </div>

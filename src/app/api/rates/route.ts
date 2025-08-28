@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 async function withRetry<T>(fn: () => Promise<T>, tries = 2): Promise<T> {
   let lastErr: any;
@@ -97,8 +98,12 @@ export async function GET(req: NextRequest) {
     });
     res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     return res;
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: "Failed to fetch rates" }, { status: 500 });
+  } catch (e: any) {
+    console.error("/api/rates error:", e?.message || e);
+    const detail = (e?.message || e?.code || String(e) || "").toString().slice(0, 300);
+    const body = process.env.NODE_ENV === "production"
+      ? { error: "Failed to fetch rates" }
+      : { error: "Failed to fetch rates", detail };
+    return NextResponse.json(body, { status: 500 });
   }
 }
