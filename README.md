@@ -198,3 +198,202 @@ Response shape for GET `/api/prices`:
 
 - Prisma P1001 (cannot reach database): verify `.env` and DB is running/accessible.
 - Docker issues on Windows: restart WSL and Docker Desktop, enable WSL2 integration, retry `docker compose up -d`.
+
+# Onion Prices - Godavari Farms
+
+A modern agricultural price tracking and management system built with Next.js, TypeScript, and PostgreSQL.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- Docker and Docker Compose
+- Git
+
+### Database Setup
+
+#### Option 1: Local PostgreSQL with Docker (Recommended)
+
+1. **Start the database:**
+   ```bash
+   docker-compose up -d postgres
+   ```
+
+2. **Create environment file:**
+   ```bash
+   cp env.example .env.local
+   ```
+
+3. **Add database connection to `.env.local`:**
+   ```env
+   DATABASE_URL="postgresql://postgres:postgres@localhost:5432/onion_prices?schema=public"
+   ADMIN_USERNAME=admin
+   ADMIN_PASSWORD=your_secure_password
+   ```
+
+4. **Run database migrations:**
+   ```bash
+   npx prisma migrate dev
+   npx prisma db seed
+   ```
+
+#### Option 2: Hosted PostgreSQL (Neon, Supabase, etc.)
+
+1. **Create a PostgreSQL database** on your preferred hosting service
+2. **Update `.env.local`** with your connection string:
+   ```env
+   DATABASE_URL="postgresql://username:password@host:port/database?sslmode=require"
+   ```
+
+### Application Setup
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Run the development server:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Access the application:**
+   - Main site: http://localhost:3000
+   - Admin panel: http://localhost:3000/admin
+   - Database admin (Adminer): http://localhost:8080
+
+## 🔧 Troubleshooting
+
+### Database Connection Issues
+
+**Error: "Can't reach database server at localhost:5432"**
+
+1. **Check if PostgreSQL is running:**
+   ```bash
+   docker-compose ps
+   ```
+
+2. **Start the database if not running:**
+   ```bash
+   docker-compose up -d postgres
+   ```
+
+3. **Check database logs:**
+   ```bash
+   docker-compose logs postgres
+   ```
+
+4. **Verify connection string** in `.env.local`
+
+5. **Test database connection:**
+   ```bash
+   npx prisma db push
+   ```
+
+### Fallback Mode
+The application includes fallback data for when the database is unavailable:
+- States API returns predefined Indian states
+- Admin dashboard shows connection status
+- APIs gracefully handle database errors
+
+### Common Solutions
+
+**Port 5432 already in use:**
+```bash
+# Stop existing PostgreSQL services
+sudo service postgresql stop
+# Or change port in docker-compose.yml
+```
+
+**Permission denied:**
+```bash
+# Reset Docker volumes
+docker-compose down -v
+docker-compose up -d postgres
+```
+
+**Migration issues:**
+```bash
+# Reset database
+npx prisma migrate reset
+npx prisma db seed
+```
+
+## 📁 Project Structure
+
+```
+src/
+├── app/
+│   ├── admin/          # Admin dashboard pages
+│   ├── api/            # API endpoints
+│   ├── products/       # Products showcase
+│   └── rates/          # Daily rates page
+├── components/         # Reusable UI components
+├── lib/               # Utilities and configurations
+└── types/             # TypeScript type definitions
+```
+
+## 🛠️ Development
+
+### Database Management
+```bash
+# View database in browser
+npm run db:studio
+
+# Reset database
+npm run db:reset
+
+# Deploy migrations
+npm run db:deploy
+```
+
+### API Endpoints
+- `GET /api/rates` - Fetch onion rates with filtering
+- `GET /api/meta/states` - Get states list
+- `GET /api/public/settings` - Public settings
+- `POST /api/admin/rates` - Add new rates (admin)
+
+### Environment Variables
+```env
+DATABASE_URL=          # PostgreSQL connection string
+ADMIN_USERNAME=        # Admin login username
+ADMIN_PASSWORD=        # Admin login password
+NEXTAUTH_SECRET=       # NextAuth.js secret key
+NEXTAUTH_URL=          # Application URL
+```
+
+## 🚀 Deployment
+
+### Production Database
+For production, use a hosted PostgreSQL service:
+- [Neon](https://neon.tech/) (Recommended)
+- [Supabase](https://supabase.com/)
+- [Railway](https://railway.app/)
+- [PlanetScale](https://planetscale.com/)
+
+### Vercel Deployment
+1. Connect your GitHub repository to Vercel
+2. Add environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
+
+## 📊 Features
+
+- **Modern UI/UX** with Tailwind CSS
+- **Real-time price tracking** with filtering and sorting
+- **Admin dashboard** with analytics and management tools
+- **Responsive design** for mobile and desktop
+- **Database fallback** for high availability
+- **API rate limiting** and error handling
+- **SEO optimized** with Next.js App Router
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
