@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
 import { getSessionUser } from "@/lib/auth/session";
 
 function toCsv(rows: any[]): string {
@@ -26,10 +25,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unknown kind" }, { status: 400 });
   }
 
-  // Build internal URL to reuse /api/rates
-  const h = await headers();
-  const host = h.get("x-forwarded-host") || h.get("host") || "localhost:3000";
-  const proto = h.get("x-forwarded-proto") || (host.startsWith("localhost") ? "http" : "https");
+  // Build internal URL to reuse /api/rates using the request's origin.
+  // This avoids any localhost/private IP fallback and works reliably on Vercel.
+  const origin = `${urlObj.protocol}//${urlObj.host}`;
 
   const today = new Date();
   const dateTo = today.toISOString().slice(0, 10);
@@ -38,7 +36,7 @@ export async function GET(req: Request) {
   const dateFrom = from.toISOString().slice(0, 10);
 
   const qs = new URLSearchParams({ page: "1", pageSize: "10000", dateFrom, dateTo }).toString();
-  const url = `${proto}://${host}/api/rates?${qs}`;
+  const url = `${origin}/api/rates?${qs}`;
 
   const r = await fetch(url, { cache: "no-store" });
   if (!r.ok) {
