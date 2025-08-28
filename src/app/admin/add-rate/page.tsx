@@ -57,8 +57,9 @@ export default function AddRatePage() {
     (async () => {
       setStatesLoading(true);
       try {
-        const data = await fetchJsonWithRetry<State[]>("/api/meta/states", 3);
-        setStates(Array.isArray(data) ? data : []);
+        const data = await fetchJsonWithRetry<{data: State[]} | State[]>("/api/meta/states", 3);
+        const statesArray = Array.isArray(data) ? data : (data?.data || []);
+        setStates(statesArray);
       } finally {
         setStatesLoading(false);
       }
@@ -70,8 +71,9 @@ export default function AddRatePage() {
     (async () => {
       setMandisLoading(true);
       try {
-        const data = await fetchJsonWithRetry<Mandi[]>(`/api/meta/mandis?stateId=${stateId}`, 3);
-        setMandis(Array.isArray(data) ? data : []);
+        const data = await fetchJsonWithRetry<{data: Mandi[]} | Mandi[]>(`/api/meta/mandis?stateId=${stateId}`, 3);
+        const mandisArray = Array.isArray(data) ? data : (data?.data || []);
+        setMandis(mandisArray);
       } finally {
         setMandisLoading(false);
       }
